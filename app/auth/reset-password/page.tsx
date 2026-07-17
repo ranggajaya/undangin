@@ -1,11 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { AuthCard } from "@/components/ui/AuthCard";
+import { FormInput } from "@/components/ui/FormInput";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const resetPasswordSchema = z
   .object({
@@ -22,8 +25,24 @@ type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 export default function ResetPasswordPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Pengecekan session: halaman ini hanya valid jika pengguna memiliki
+  // session aktif (yang dibuat otomatis dari tautan reset di email).
+  useEffect(() => {
+    const checkSession = async () => {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/login?error=Sesi reset tidak valid. Silakan minta link reset yang baru.");
+        return;
+      }
+      setIsCheckingSession(false);
+    };
+    checkSession();
+  }, [router]);
 
   const {
     register,
@@ -52,93 +71,58 @@ export default function ResetPasswordPage() {
           router.push("/login");
         }, 3000);
       }
-    } catch (err: any) {
-      setError(err?.message || "Terjadi kesalahan sistem.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan sistem.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (isCheckingSession) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-cream">
+        <p className="text-sm text-ink/60">Memverifikasi sesi...</p>
+      </main>
+    );
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-cream">
-      <div className="w-full max-w-md rounded-2xl border border-ink/10 bg-white p-8 shadow-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-terracotta">
-            <span className="font-heading text-lg text-cream">U</span>
-          </div>
-          <h1 className="font-heading text-2xl text-ink">Password Baru</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            Masukkan kata sandi baru untuk akun Anda
+    <AuthCard title="Password Baru" description="Masukkan kata sandi baru untuk akun Anda">
+      {success ? (
+        <div className="rounded-xl bg-sage/10 p-4 text-center text-sm text-ink">
+          <p className="font-semibold text-sage">Password Berhasil Diubah!</p>
+          <p className="mt-2 text-ink/75">
+            Password Anda telah diperbarui. Mengalihkan ke halaman masuk dalam 3 detik...
           </p>
         </div>
-
-        {success ? (
-          <div className="rounded-xl bg-sage/10 p-4 text-center text-sm text-ink">
-            <p className="font-semibold text-sage">Password Berhasil Diubah!</p>
-            <p className="mt-2 text-ink/75">
-              Password Anda telah diperbarui. Mengalihkan Anda ke halaman masuk dalam 3 detik...
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold uppercase tracking-wider text-ink/70 mb-1.5"
-              >
-                Password Baru
-              </label>
-              <input
-                id="password"
-                type="password"
-                {...register("password")}
-                placeholder="••••••"
-                className="w-full rounded-lg border border-ink/20 px-3.5 py-2 text-sm text-ink focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
-              />
-              {errors.password && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-xs font-semibold uppercase tracking-wider text-ink/70 mb-1.5"
-              >
-                Konfirmasi Password Baru
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                {...register("confirmPassword")}
-                placeholder="••••••"
-                className="w-full rounded-lg border border-ink/20 px-3.5 py-2 text-sm text-ink focus:border-terracotta focus:outline-none focus:ring-1 focus:ring-terracotta"
-              />
-              {errors.confirmPassword && (
-                <p className="mt-1 text-xs text-red-600">
-                  {errors.confirmPassword.message}
-                </p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full rounded-lg bg-terracotta py-2.5 text-sm font-medium text-cream hover:bg-terracotta/90 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? "Memperbarui..." : "Simpan Password Baru"}
-            </button>
-          </form>
-        )}
-      </div>
-    </main>
+      ) : (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {error && (
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+          )}
+          <FormInput
+            id="password"
+            label="Password Baru"
+            type="password"
+            placeholder="••••••"
+            registration={register("password")}
+            errorMessage={errors.password?.message}
+          />
+          <FormInput
+            id="confirmPassword"
+            label="Konfirmasi Password Baru"
+            type="password"
+            placeholder="••••••"
+            registration={register("confirmPassword")}
+            errorMessage={errors.confirmPassword?.message}
+          />
+          <SubmitButton
+            isLoading={isLoading}
+            label="Simpan Password Baru"
+            loadingLabel="Memperbarui..."
+          />
+        </form>
+      )}
+    </AuthCard>
   );
 }

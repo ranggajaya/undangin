@@ -85,7 +85,6 @@ export interface Database {
           slug?: string
           status?: 'draft' | 'published'
           masa_aktif_mulai?: string | null
-          academic_year?: string | null
           masa_aktif_selesai?: string | null
           data?: Json
           created_at?: string
