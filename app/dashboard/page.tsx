@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { createDraftInvitation } from "@/lib/actions/invitations";
 import { getCurrentUserWithRole } from "@/lib/get-current-user-role";
+import { signOut } from "@/lib/actions/auth";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -40,6 +41,14 @@ export default async function DashboardPage() {
               className="rounded-lg bg-terracotta px-4 py-2 text-sm font-medium text-cream"
             >
               + Buat Undangan Baru
+            </button>
+          </form>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="rounded-lg border border-ink/20 px-4 py-2 text-sm text-ink/50"
+            >
+              Keluar
             </button>
           </form>
         </div>
