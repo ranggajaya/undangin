@@ -18,7 +18,7 @@ export default function RoseaMinimalTemplate({
   return (
     <main
       className="mx-auto min-h-screen max-w-md px-5 py-10 text-center"
-      style={{ backgroundColor: theme.background, color: theme.text }}
+      style={{ background: theme.background, color: theme.text }}
     >
       <p
         className="mb-2 text-xs tracking-[0.2em]"

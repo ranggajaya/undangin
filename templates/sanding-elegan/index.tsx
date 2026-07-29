@@ -19,7 +19,7 @@ export default function SandingEleganTemplate({
   return (
     <main
       className="mx-auto min-h-screen max-w-md px-6 py-12 text-center"
-      style={{ backgroundColor: theme.background, color: theme.text }}
+      style={{ background: theme.background, color: theme.text }}
     >
       <Divider theme={theme} />
 

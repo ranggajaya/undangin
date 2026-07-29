@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserWithRole } from "@/lib/get-current-user-role";
 import { redirect } from "next/navigation";
 import { updateUserRole } from "@/lib/actions/admin-users";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const ROLES = ["user", "customer_support", "template_admin", "super_admin"] as const;
 
@@ -17,20 +18,29 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-heading text-2xl text-ink">Kelola Pengguna</h1>
-      <div className="overflow-hidden rounded-xl border border-ink/10 bg-white">
+      <PageHeader
+        title="Kelola Pengguna"
+        description={
+          profiles && profiles.length > 0 ? `${profiles.length} akun` : undefined
+        }
+      />
+      <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white">
         <table className="w-full text-sm">
-          <thead className="bg-ink/5 text-left text-xs uppercase tracking-wide text-ink/50">
+          <thead className="border-b border-ink/10 text-left text-xs font-medium uppercase tracking-wide text-ink/40">
             <tr>
-              <th className="px-4 py-3">Nama</th>
-              <th className="px-4 py-3">Role</th>
+              <th className="px-5 py-3.5">Nama</th>
+              <th className="px-5 py-3.5">Role</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-ink/5">
             {profiles?.map((p) => (
-              <tr key={p.id} className="border-t border-ink/5">
-                <td className="px-4 py-3">{p.full_name ?? "(tanpa nama)"}</td>
-                <td className="px-4 py-3">
+              <tr key={p.id} className="transition-colors hover:bg-ink/[0.015]">
+                <td className="px-5 py-3.5 font-medium text-ink">
+                  {p.full_name ?? (
+                    <span className="italic text-ink/40">tanpa nama</span>
+                  )}
+                </td>
+                <td className="px-5 py-3.5">
                   <form
                     action={async (formData) => {
                       "use server";
@@ -44,7 +54,7 @@ export default async function AdminUsersPage() {
                     <select
                       name="role"
                       defaultValue={p.role}
-                      className="rounded-lg border border-ink/15 px-2 py-1 text-xs"
+                      className="rounded-lg border border-ink/15 px-2.5 py-1.5 text-xs focus:border-terracotta focus:outline-none"
                     >
                       {ROLES.map((r) => (
                         <option key={r} value={r}>
@@ -54,7 +64,7 @@ export default async function AdminUsersPage() {
                     </select>
                     <button
                       type="submit"
-                      className="rounded-lg border border-terracotta px-2 py-1 text-xs text-terracotta"
+                      className="rounded-lg border border-terracotta px-2.5 py-1.5 text-xs font-medium text-terracotta transition-colors hover:bg-terracotta/5"
                     >
                       Simpan
                     </button>

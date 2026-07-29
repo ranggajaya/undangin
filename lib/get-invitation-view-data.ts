@@ -22,12 +22,22 @@ export async function getPublicInvitationView(
 
   const { data: invitation } = await supabase
     .from("invitations")
-    .select("id, data, status, template_id, package")
+    .select("id, data, status, template_id, package, owner_id")
     .eq("slug", slug)
-    .eq("status", "published")
     .single();
 
   if (!invitation || !invitation.template_id) return null;
+
+  // Undangan published boleh dilihat siapa saja (tamu). Undangan draft
+  // cuma boleh di-preview oleh pemiliknya sendiri — supaya orang lain tidak
+  // bisa lihat data pribadi (nama, tanggal, lokasi acara) sebelum dipublish.
+  if (invitation.status !== "published") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || user.id !== invitation.owner_id) return null;
+  }
 
   const { data: template } = await supabase
     .from("templates")
