@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import type { TemplateProps } from "../types";
+import { WallOfWishes } from "../shared/WallOfWishes";
+import { Watermark } from "../shared/Watermark";
 
-// Template "rosea minimal" — kategori: minimalis.
-// Ini template referensi pertama; template lain mengikuti struktur props
-// yang sama tapi bebas beda total secara visual.
+// Template "rosea minimal" — kategori: minimalis. Latar gelap, tipografi
+// besar, layout satu kolom lurus ke bawah — kesan clean dan modern.
 export default function RoseaMinimalTemplate({
   invitationId,
   data,
@@ -27,10 +26,7 @@ export default function RoseaMinimalTemplate({
       >
         THE WEDDING OF
       </p>
-      <h1
-        className="mb-1 text-3xl"
-        style={{ fontFamily: theme.fontHeading }}
-      >
+      <h1 className="mb-1 text-3xl" style={{ fontFamily: theme.fontHeading }}>
         {data.groomName} &amp; {data.brideName}
       </h1>
       {mainEvent && (
@@ -91,10 +87,7 @@ export default function RoseaMinimalTemplate({
 
       {data.loveStory && (
         <section className="mb-8 text-left">
-          <h2
-            className="mb-2 text-lg"
-            style={{ fontFamily: theme.fontHeading }}
-          >
+          <h2 className="mb-2 text-lg" style={{ fontFamily: theme.fontHeading }}>
             Cerita Kami
           </h2>
           <p
@@ -149,163 +142,5 @@ export default function RoseaMinimalTemplate({
 
       {showWatermark && <Watermark />}
     </main>
-  );
-}
-
-// Sengaja pakai warna brand Undangin (bukan `theme` milik template), karena
-// ini identitas produk, bukan bagian dari desain undangan itu sendiri.
-function Watermark() {
-  return (
-    <a
-      href="/"
-      target="_blank"
-      className="mt-6 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs"
-      style={{ backgroundColor: "#FDF8F420", color: "#FDF8F4" }}
-    >
-      Dibuat dengan{" "}
-      <span className="font-heading" style={{ color: "#C17767" }}>
-        undangin
-      </span>
-    </a>
-  );
-}
-
-function WallOfWishes({
-  invitationId,
-  initialWishes,
-  theme,
-  onSubmitWish,
-}: {
-  invitationId: string;
-  initialWishes: TemplateProps["data"]["wishes"];
-  theme: TemplateProps["theme"];
-  onSubmitWish?: TemplateProps["onSubmitWish"];
-}) {
-  const [wishes, setWishes] = useState(initialWishes);
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    // Filter di level database (bukan filter di client) supaya browser
-    // tidak menerima event dari undangan orang lain sama sekali.
-    const channel = supabase
-      .channel(`wishes-${invitationId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "wishes",
-          filter: `invitation_id=eq.${invitationId}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            id: string;
-            nama_tamu: string;
-            pesan: string;
-            created_at: string;
-          };
-
-          setWishes((prev) => {
-            // Hindari duplikat kalau event yang sama entah kenapa masuk 2x
-            // (Supabase Realtime kadang retry saat koneksi sempat putus).
-            if (prev.some((w) => w.id === row.id)) return prev;
-            return [
-              {
-                id: row.id,
-                guestName: row.nama_tamu,
-                message: row.pesan,
-                createdAt: row.created_at,
-              },
-              ...prev,
-            ];
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [invitationId]);
-
-  return (
-    <section className="border-t pt-6 text-left" style={{ borderColor: theme.textMuted + "40" }}>
-      <h2
-        className="mb-3 text-sm font-semibold"
-        style={{ color: theme.textMuted, fontFamily: theme.fontBody }}
-      >
-        Ucapan &amp; Doa ({wishes.length})
-      </h2>
-      <div className="mb-4 max-h-72 space-y-2 overflow-y-auto">
-        {wishes.map((wish) => (
-          <div
-            key={wish.id}
-            className="rounded-lg p-3"
-            style={{ backgroundColor: theme.surface }}
-          >
-            <p
-              className="mb-0.5 text-xs font-semibold"
-              style={{ fontFamily: theme.fontBody }}
-            >
-              {wish.guestName}
-            </p>
-            <p
-              className="text-xs"
-              style={{ color: theme.textMuted, fontFamily: theme.fontBody }}
-            >
-              {wish.message}
-            </p>
-          </div>
-        ))}
-      </div>
-      {onSubmitWish && <WishForm theme={theme} onSubmitWish={onSubmitWish} />}
-    </section>
-  );
-}
-
-function WishForm({
-  theme,
-  onSubmitWish,
-}: {
-  theme: TemplateProps["theme"];
-  onSubmitWish: NonNullable<TemplateProps["onSubmitWish"]>;
-}) {
-  return (
-    <form
-      className="flex gap-2"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const form = e.currentTarget;
-        const formData = new FormData(form);
-        const guestName = String(formData.get("guestName") ?? "");
-        const message = String(formData.get("message") ?? "");
-        if (!guestName || !message) return;
-        await onSubmitWish(guestName, message);
-        form.reset();
-      }}
-    >
-      <input
-        name="guestName"
-        placeholder="Nama"
-        required
-        className="w-24 rounded-lg border-0 px-3 py-2 text-xs"
-        style={{ backgroundColor: theme.surface, color: theme.text }}
-      />
-      <input
-        name="message"
-        placeholder="Tulis ucapan..."
-        required
-        className="flex-1 rounded-lg border-0 px-3 py-2 text-xs"
-        style={{ backgroundColor: theme.surface, color: theme.text }}
-      />
-      <button
-        type="submit"
-        className="rounded-lg px-3 py-2 text-xs font-medium"
-        style={{ backgroundColor: theme.accent, color: theme.background }}
-      >
-        Kirim
-      </button>
-    </form>
   );
 }

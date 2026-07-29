@@ -51,6 +51,36 @@ export async function createDraftInvitation() {
   redirect(`/editor/${invitation.id}`);
 }
 
+// Dipanggil dari /katalog saat user memilih desain tertentu. Kalau belum
+// login, redirect ke /register dulu — template yang dipilih untuk sekarang
+// tidak ikut terbawa lewat alur daftar (nice-to-have untuk nanti).
+export async function createDraftInvitationWithTemplate(templateId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect(`/register?template=${templateId}`);
+
+  const { data: invitation, error } = await supabase
+    .from("invitations")
+    .insert({
+      owner_id: user.id,
+      template_id: templateId,
+      slug: generateSlug("undangan", "baru"),
+      status: "draft",
+      data: EMPTY_DRAFT_DATA as unknown as never,
+    })
+    .select("id")
+    .single();
+
+  if (error || !invitation) {
+    throw new Error(error?.message ?? "Gagal membuat draft undangan.");
+  }
+
+  redirect(`/editor/${invitation.id}`);
+}
+
 // Auto-save: dipanggil dari client tiap kali form berubah (sudah di-debounce
 // di sisi client, lihat components/editor/EditorForm.tsx).
 export async function saveDraftInvitation(

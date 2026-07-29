@@ -2,6 +2,8 @@ import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 import type { TemplateMeta, TemplateProps } from "./types";
 import { roseaMinimalTheme } from "./rosea-minimal/theme";
+import { sandingEleganTheme } from "./sanding-elegan/theme";
+import { kebunSenjaTheme } from "./kebun-senja/theme";
 
 // Tambahkan entry baru di sini setiap kali ada desain baru.
 // `id` HARUS sama dengan kolom `id` di tabel `templates` (Supabase).
@@ -23,8 +25,28 @@ export const templateRegistry: Record<
       loading: () => <TemplateLoadingFallback />,
     }),
   },
-  // "sanding-elegan": { ... }  <- contoh slot untuk template ke-2
-  // "kebun-senja": { ... }     <- contoh slot untuk template ke-3
+  "sanding-elegan": {
+    meta: {
+      name: "Sanding Elegan",
+      category: "elegan",
+      thumbnailUrl: "/templates/sanding-elegan/thumbnail.jpg",
+      defaultTheme: sandingEleganTheme,
+    },
+    component: dynamic(() => import("./sanding-elegan"), {
+      loading: () => <TemplateLoadingFallback />,
+    }),
+  },
+  "kebun-senja": {
+    meta: {
+      name: "Kebun Senja",
+      category: "rustic",
+      thumbnailUrl: "/templates/kebun-senja/thumbnail.jpg",
+      defaultTheme: kebunSenjaTheme,
+    },
+    component: dynamic(() => import("./kebun-senja"), {
+      loading: () => <TemplateLoadingFallback />,
+    }),
+  },
 };
 
 export function getTemplate(templateId: string) {
