@@ -46,10 +46,13 @@ export async function generateMetadata({
 
 export default async function PublicInvitationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ to?: string }>;
 }) {
   const { slug } = await params;
+  const { to } = await searchParams;
   const view = await getPublicInvitationView(slug);
 
   if (!view) notFound();
@@ -72,6 +75,7 @@ export default async function PublicInvitationPage({
       data={view.data}
       theme={theme}
       showWatermark={view.showWatermark}
+      guestName={to ? decodeURIComponent(to) : undefined}
       onSubmitWish={async (guestName: string, message: string) => {
         "use server";
         await submitWish(slug, guestName, message);

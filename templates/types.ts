@@ -48,6 +48,7 @@ export interface TemplateProps {
   data: InvitationData;
   theme: ThemeConfig;
   showWatermark?: boolean;
+  guestName?: string;
   onSubmitWish?: (guestName: string, message: string) => Promise<void>;
 }
 

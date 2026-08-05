@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { EditTemplateForm } from "./EditTemplateForm";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default async function EditTemplatePage({
   params,
@@ -20,9 +21,7 @@ export default async function EditTemplatePage({
 
   return (
     <div>
-      <h1 className="mb-6 font-heading text-2xl text-ink">
-        Edit Template: {template.name}
-      </h1>
+      <PageHeader title={`Edit Template: ${template.name}`} />
       <EditTemplateForm template={template} />
     </div>
   );

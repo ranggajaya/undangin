@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { TemplateFormInput } from "@/lib/actions/admin-templates";
+import { Button } from "@/components/ui/Button";
 
 export function TemplateForm({
   initialValues,
@@ -40,7 +41,7 @@ export function TemplateForm({
 
   return (
     <form
-      className="max-w-xl space-y-4"
+      className="max-w-xl rounded-2xl border border-ink/10 bg-white p-6"
       onSubmit={async (e) => {
         e.preventDefault();
         setError(null);
@@ -55,105 +56,120 @@ export function TemplateForm({
       }}
     >
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
           {error}
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="mb-1 block text-xs text-ink/60">
-            Slug{" "}
-            <span className="text-ink/40">(harus cocok dengan folder di templates/)</span>
-          </label>
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Slug" hint="harus cocok dengan folder di templates/">
+            <input
+              className="field"
+              value={values.slug}
+              onChange={(e) => setValues({ ...values, slug: e.target.value })}
+              placeholder="rosea-minimal"
+              required
+            />
+          </Field>
+          <Field label="Nama Tampilan">
+            <input
+              className="field"
+              value={values.name}
+              onChange={(e) => setValues({ ...values, name: e.target.value })}
+              placeholder="Rosea Minimal"
+              required
+            />
+          </Field>
+        </div>
+
+        <Field label="Kategori">
           <input
-            className="input"
-            value={values.slug}
-            onChange={(e) => setValues({ ...values, slug: e.target.value })}
-            placeholder="rosea-minimal"
+            className="field"
+            value={values.kategori}
+            onChange={(e) => setValues({ ...values, kategori: e.target.value })}
+            placeholder="minimalis"
             required
           />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-ink/60">Nama Tampilan</label>
+        </Field>
+
+        <Field label="Thumbnail URL">
           <input
-            className="input"
-            value={values.name}
-            onChange={(e) => setValues({ ...values, name: e.target.value })}
-            placeholder="Rosea Minimal"
-            required
+            className="field"
+            value={values.thumbnailUrl}
+            onChange={(e) =>
+              setValues({ ...values, thumbnailUrl: e.target.value })
+            }
+            placeholder="/templates/rosea-minimal/thumbnail.jpg"
           />
-        </div>
-      </div>
+        </Field>
 
-      <div>
-        <label className="mb-1 block text-xs text-ink/60">Kategori</label>
-        <input
-          className="input"
-          value={values.kategori}
-          onChange={(e) => setValues({ ...values, kategori: e.target.value })}
-          placeholder="minimalis"
-          required
-        />
-      </div>
+        <Field label="Default Theme Config (JSON)">
+          <textarea
+            className="field min-h-[180px] font-mono text-xs leading-relaxed"
+            value={values.defaultThemeConfig}
+            onChange={(e) =>
+              setValues({ ...values, defaultThemeConfig: e.target.value })
+            }
+          />
+        </Field>
 
-      <div>
-        <label className="mb-1 block text-xs text-ink/60">Thumbnail URL</label>
-        <input
-          className="input"
-          value={values.thumbnailUrl}
-          onChange={(e) =>
-            setValues({ ...values, thumbnailUrl: e.target.value })
-          }
-          placeholder="/templates/rosea-minimal/thumbnail.jpg"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-xs text-ink/60">
-          Default Theme Config (JSON)
+        <label className="flex items-center gap-2.5 text-sm text-ink/70">
+          <input
+            type="checkbox"
+            checked={values.isActive}
+            onChange={(e) =>
+              setValues({ ...values, isActive: e.target.checked })
+            }
+            className="h-4 w-4 rounded border-ink/25 text-terracotta focus:ring-terracotta"
+          />
+          Aktif (tampil di katalog)
         </label>
-        <textarea
-          className="input min-h-[180px] font-mono text-xs"
-          value={values.defaultThemeConfig}
-          onChange={(e) =>
-            setValues({ ...values, defaultThemeConfig: e.target.value })
-          }
-        />
+
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? "Menyimpan..." : submitLabel}
+        </Button>
       </div>
-
-      <label className="flex items-center gap-2 text-sm text-ink/70">
-        <input
-          type="checkbox"
-          checked={values.isActive}
-          onChange={(e) => setValues({ ...values, isActive: e.target.checked })}
-        />
-        Aktif (tampil di katalog)
-      </label>
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-lg bg-terracotta px-5 py-2.5 text-sm font-medium text-cream disabled:opacity-50"
-      >
-        {isSubmitting ? "Menyimpan..." : submitLabel}
-      </button>
 
       <style jsx global>{`
-        .input {
+        .field {
           width: 100%;
           border-radius: 0.5rem;
           border: 1px solid rgba(43, 36, 32, 0.15);
-          padding: 0.5rem 0.75rem;
+          padding: 0.6rem 0.75rem;
           font-size: 0.875rem;
           background: white;
         }
-        .input:focus {
+        .field:focus {
           outline: none;
           border-color: #c17767;
           box-shadow: 0 0 0 1px #c17767;
         }
       `}</style>
     </form>
+  );
+}
+
+function Field({
+  label,
+  hint,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-ink/60">
+        {label}
+        {hint && (
+          <span className="ml-1.5 font-normal normal-case tracking-normal text-ink/35">
+            ({hint})
+          </span>
+        )}
+      </label>
+      {children}
+    </div>
   );
 }

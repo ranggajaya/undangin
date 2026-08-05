@@ -2,11 +2,12 @@
 
 import { TemplateForm } from "@/components/admin/TemplateForm";
 import { createTemplate } from "@/lib/actions/admin-templates";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default function NewTemplatePage() {
   return (
     <div>
-      <h1 className="mb-6 font-heading text-2xl text-ink">Template Baru</h1>
+      <PageHeader title="Template Baru" description="Tambahkan desain undangan baru ke katalog." />
       <TemplateForm onSubmit={createTemplate} submitLabel="Buat Template" />
     </div>
   );

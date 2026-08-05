@@ -5,10 +5,21 @@ import { useForm, Controller, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
+  Heart,
+  CalendarHeart,
+  BookHeart,
+  Gift,
+  Images,
+  ArrowLeft,
+  X,
+  Plus,
+} from "lucide-react";
+import {
   saveDraftInvitation,
   uploadInvitationAsset,
 } from "@/lib/actions/invitations";
 import type { DraftInvitationData } from "@/lib/invitation-data";
+import { Badge } from "@/components/ui/Badge";
 
 const eventSchema = z.object({
   label: z.string(),
@@ -69,9 +80,6 @@ export function EditorForm({
 
   const watchedValues = watch();
 
-  // Auto-save: setiap perubahan di-debounce, baru dikirim ke server action.
-  // galleryUrls tidak lewat react-hook-form karena diupdate lewat upload,
-  // jadi sengaja dimasukkan sebagai dependency terpisah di bawah.
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
 
@@ -103,8 +111,6 @@ export function EditorForm({
 
     setIsUploading(true);
     try {
-      // Upload berurutan (bukan Promise.all) supaya tidak membanjiri
-      // Supabase Storage kalau user pilih banyak foto sekaligus.
       const uploadedUrls: string[] = [];
       for (const file of Array.from(files)) {
         const formData = new FormData();
@@ -126,161 +132,179 @@ export function EditorForm({
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-3xl px-6 py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-heading text-2xl text-ink">Isi Data Undangan</h1>
-        <SaveStatusBadge status={saveStatus} />
-      </div>
-
-      <div className="grid gap-8 md:grid-cols-[1fr_240px]">
-        <div className="space-y-6">
-          <Section title="Nama Pasangan">
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Nama pria" error={errors.groomName?.message}>
-                <input
-                  {...register("groomName")}
-                  className="input"
-                  placeholder="Bagas"
-                />
-              </Field>
-              <Field label="Nama wanita" error={errors.brideName?.message}>
-                <input
-                  {...register("brideName")}
-                  className="input"
-                  placeholder="Ayu"
-                />
-              </Field>
-            </div>
-          </Section>
-
-          <Section title="Akad Nikah">
-            <EventFields
-              register={register}
-              control={control}
-              prefix="akad"
-              errors={errors.akad}
-            />
-          </Section>
-
-          <Section title="Resepsi">
-            <EventFields
-              register={register}
-              control={control}
-              prefix="resepsi"
-              errors={errors.resepsi}
-            />
-          </Section>
-
-          <Section title="Cerita Pasangan">
-            <textarea
-              {...register("loveStory")}
-              className="input min-h-[100px]"
-              placeholder="Ceritakan bagaimana kalian bertemu..."
-            />
-          </Section>
-
-          <Section title="Info Hadiah">
-            <textarea
-              {...register("giftInfo")}
-              className="input min-h-[70px]"
-              placeholder="Nomor rekening / alamat kado (opsional)"
-            />
-          </Section>
-
-          <Section title="Galeri Foto">
-            <div className="flex flex-wrap gap-3">
-              {galleryUrls.map((url) => (
-                <div key={url} className="group relative h-20 w-20">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt="Foto galeri"
-                    className="h-20 w-20 rounded-lg object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(url)}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-xs text-cream opacity-0 group-hover:opacity-100"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-lg border border-dashed border-terracotta text-terracotta">
-                {isUploading ? (
-                  <span className="text-xs">...</span>
-                ) : (
-                  <span className="text-xl">+</span>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                  disabled={isUploading}
-                />
-              </label>
-            </div>
-            <p className="mt-1.5 text-xs text-ink/40">
-              Bisa pilih beberapa foto sekaligus.
-            </p>
-          </Section>
-        </div>
-
-        <aside>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink/50">
-            Preview
-          </p>
-          <div className="sticky top-6 rounded-xl bg-ink p-4 text-center text-cream">
-            <p className="font-heading text-lg">
-              {watchedValues.groomName || "Nama Pria"} &amp;{" "}
-              {watchedValues.brideName || "Nama Wanita"}
-            </p>
-            <p className="mt-1 text-xs text-cream/60">
-              {watchedValues.akad?.date || "Tanggal akad belum diisi"}
-            </p>
-          </div>
+    <div className="min-h-screen bg-cream">
+      <header className="border-b border-ink/10 bg-white">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-4">
           <a
-            href={`/u/${slug}`}
-            target="_blank"
-            className="mt-3 block text-center text-xs text-terracotta underline"
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-sm text-ink/50 hover:text-ink"
           >
-            Lihat preview penuh →
+            <ArrowLeft size={15} /> Dashboard
           </a>
-          {children && <div className="mt-4">{children}</div>}
-        </aside>
-      </div>
+          <SaveStatusBadge status={saveStatus} />
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-6 py-8">
+        <h1 className="mb-6 font-heading text-2xl text-ink">Isi Data Undangan</h1>
+
+        <div className="grid gap-6 md:grid-cols-[1fr_260px]">
+          <div className="space-y-4">
+            <Card icon={<Heart size={16} />} title="Nama Pasangan">
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Nama pria" error={errors.groomName?.message}>
+                  <input
+                    {...register("groomName")}
+                    className="field"
+                    placeholder="Bagas"
+                  />
+                </Field>
+                <Field label="Nama wanita" error={errors.brideName?.message}>
+                  <input
+                    {...register("brideName")}
+                    className="field"
+                    placeholder="Ayu"
+                  />
+                </Field>
+              </div>
+            </Card>
+
+            <Card icon={<CalendarHeart size={16} />} title="Akad Nikah">
+              <EventFields
+                register={register}
+                control={control}
+                prefix="akad"
+                errors={errors.akad}
+              />
+            </Card>
+
+            <Card icon={<CalendarHeart size={16} />} title="Resepsi">
+              <EventFields
+                register={register}
+                control={control}
+                prefix="resepsi"
+                errors={errors.resepsi}
+              />
+            </Card>
+
+            <Card icon={<BookHeart size={16} />} title="Cerita Pasangan">
+              <textarea
+                {...register("loveStory")}
+                className="field min-h-[100px]"
+                placeholder="Ceritakan bagaimana kalian bertemu..."
+              />
+            </Card>
+
+            <Card icon={<Gift size={16} />} title="Info Hadiah">
+              <textarea
+                {...register("giftInfo")}
+                className="field min-h-[70px]"
+                placeholder="Nomor rekening / alamat kado (opsional)"
+              />
+            </Card>
+
+            <Card icon={<Images size={16} />} title="Galeri Foto">
+              <div className="flex flex-wrap gap-3">
+                {galleryUrls.map((url) => (
+                  <div key={url} className="group relative h-20 w-20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt="Foto galeri"
+                      className="h-20 w-20 rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(url)}
+                      className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-cream opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-terracotta/50 text-terracotta transition-colors hover:border-terracotta hover:bg-terracotta/5">
+                  {isUploading ? (
+                    <span className="text-xs">...</span>
+                  ) : (
+                    <Plus size={18} />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                </label>
+              </div>
+              <p className="mt-2 text-xs text-ink/40">
+                Bisa pilih beberapa foto sekaligus.
+              </p>
+            </Card>
+          </div>
+
+          <aside>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ink/50">
+              Preview
+            </p>
+            <div className="sticky top-6 space-y-3">
+              <div className="rounded-2xl bg-ink p-5 text-center text-cream shadow-sm">
+                <p className="font-heading text-lg">
+                  {watchedValues.groomName || "Nama Pria"} &amp;{" "}
+                  {watchedValues.brideName || "Nama Wanita"}
+                </p>
+                <p className="mt-1 text-xs text-cream/50">
+                  {watchedValues.akad?.date || "Tanggal akad belum diisi"}
+                </p>
+              </div>
+              <a
+                href={`/u/${slug}`}
+                target="_blank"
+                className="block rounded-lg border border-ink/10 bg-white py-2 text-center text-xs font-medium text-terracotta hover:border-terracotta/30"
+              >
+                Lihat preview penuh →
+              </a>
+              {children}
+            </div>
+          </aside>
+        </div>
+      </main>
 
       <style jsx global>{`
-        .input {
+        .field {
           width: 100%;
           border-radius: 0.5rem;
-          border: 1px solid rgba(43, 36, 32, 0.15);
-          padding: 0.5rem 0.75rem;
+          border: 1px solid rgba(43, 36, 32, 0.13);
+          padding: 0.55rem 0.75rem;
           font-size: 0.875rem;
           background: white;
         }
-        .input:focus {
+        .field:focus {
           outline: none;
           border-color: #c17767;
           box-shadow: 0 0 0 1px #c17767;
         }
       `}</style>
-    </main>
+    </div>
   );
 }
 
-function Section({
+function Card({
+  icon,
   title,
   children,
 }: {
+  icon: React.ReactNode;
   title: string;
   children: React.ReactNode;
 }) {
   return (
-    <section>
-      <h2 className="mb-2 text-sm font-semibold text-ink">{title}</h2>
+    <section className="rounded-2xl border border-ink/10 bg-white p-5">
+      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+        <span className="text-terracotta">{icon}</span>
+        {title}
+      </h2>
       {children}
     </section>
   );
@@ -297,7 +321,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1 block text-xs text-ink/60">{label}</label>
+      <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-ink/45">
+        {label}
+      </label>
       {children}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
@@ -322,7 +348,7 @@ function EventFields({
   return (
     <div className="grid grid-cols-2 gap-3">
       <Field label="Tanggal" error={errors?.date?.message}>
-        <input type="date" {...register(`${prefix}.date`)} className="input" />
+        <input type="date" {...register(`${prefix}.date`)} className="field" />
       </Field>
       <TimeRangeField
         control={control}
@@ -332,7 +358,7 @@ function EventFields({
       <Field label="Lokasi" error={errors?.location?.message}>
         <input
           {...register(`${prefix}.location`)}
-          className="input col-span-2"
+          className="field col-span-2"
           placeholder="Nama gedung / alamat"
         />
       </Field>
@@ -340,8 +366,6 @@ function EventFields({
   );
 }
 
-// Format tersimpan tetap satu string ("08:00 - 10:00 WIB") supaya kompatibel
-// dengan yang dibaca komponen template, tapi user pilih lewat 2 time-picker.
 function parseTimeRange(value: string): [string, string] {
   const match = value?.match(/(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/);
   return match ? [match[1], match[2]] : ["", ""];
@@ -369,7 +393,9 @@ function TimeRangeField({
         const [start, end] = parseTimeRange(field.value);
         return (
           <div>
-            <label className="mb-1 block text-xs text-ink/60">Waktu</label>
+            <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-ink/45">
+              Waktu
+            </label>
             <div className="flex items-center gap-1.5">
               <input
                 type="time"
@@ -377,16 +403,16 @@ function TimeRangeField({
                 onChange={(e) =>
                   field.onChange(formatTimeRange(e.target.value, end))
                 }
-                className="input"
+                className="field"
               />
-              <span className="text-xs text-ink/40">–</span>
+              <span className="text-xs text-ink/30">–</span>
               <input
                 type="time"
                 value={end}
                 onChange={(e) =>
                   field.onChange(formatTimeRange(start, e.target.value))
                 }
-                className="input"
+                className="field"
               />
             </div>
             {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
@@ -403,18 +429,11 @@ function SaveStatusBadge({
   status: "idle" | "saving" | "saved" | "error";
 }) {
   const config = {
-    idle: { text: "Draft tersimpan", color: "#8A9A7E" },
-    saving: { text: "Menyimpan...", color: "#B8935F" },
-    saved: { text: "Draft tersimpan", color: "#8A9A7E" },
-    error: { text: "Gagal menyimpan", color: "#C1524A" },
+    idle: { text: "Draft tersimpan", tone: "sage" as const },
+    saving: { text: "Menyimpan...", tone: "terracotta" as const },
+    saved: { text: "Draft tersimpan", tone: "sage" as const },
+    error: { text: "Gagal menyimpan", tone: "red" as const },
   }[status];
 
-  return (
-    <span
-      className="rounded-full px-3 py-1 text-xs font-medium"
-      style={{ backgroundColor: `${config.color}20`, color: config.color }}
-    >
-      {config.text}
-    </span>
-  );
+  return <Badge tone={config.tone}>{config.text}</Badge>;
 }
